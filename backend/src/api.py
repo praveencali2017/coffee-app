@@ -80,9 +80,12 @@ def add_drinks(payload):
     Adds the new drink to the drinks collection
     :return: JSON (success)
     """
-    if 'id' in payload:
-        del payload['id']
-    drink_dbo = Drink(**payload)
+    request_data = request.get_json()
+    print("[add_drinks]")
+    print(request_data)
+    title = request_data['title']
+    recipe = json.dumps(request_data['recipe'])
+    drink_dbo = Drink(title = title, recipe = recipe)
     drink_dbo.insert()
     return jsonify({'success': True, 'drinks': [drink_dbo.long()]}), 200
 
@@ -107,11 +110,15 @@ def update_drinks(payload, id):
     Updates the drink based on the given drink id
     :return: JSON (success) / raise exception 404 if id not found
     """
-    drink_dbo = Drink.query.filter_by(Drink.id == id).first()
+    request_data = request.get_json()
+    print(request_data)
+    drink_dbo = Drink.query.filter(Drink.id == id).first()
     if drink_dbo is None:
         abort(404, message=f'Cannot find the drink for the given id: {payload["id"]}')
-    drink_dbo.title = payload['title']
-    drink_dbo.recipe = payload['recipe']
+    if 'title' in request_data:
+        drink_dbo.title = request_data['title']
+    if 'recipe' in request_data:
+        drink_dbo.recipe = request_data['recipe']
     drink_dbo.update()
     return jsonify({'success': True, 'drinks': [drink_dbo.long()]}), 200
 
@@ -133,7 +140,7 @@ def del_drinks(payload, id):
     Deletes the drink based on the given drink id
     :return: JSON (success) / raise exception 404 if id not found
     """
-    drink_dbo = Drink.query.filter_by(Drink.id == id).first()
+    drink_dbo = Drink.query.filter(Drink.id == id).first()
     if drink_dbo is None:
         abort(404, message=f'Cannot find the drink for the given id: {payload["id"]}. Delete failed.')
     drink_dbo.delete()

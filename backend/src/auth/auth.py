@@ -68,12 +68,12 @@ def check_permissions(permission, payload):
         raise AuthError({
             'code': 'invalid_claims',
             'description': 'Permissions not included in JWT.'
-        }, status_code = 400)
+        }, status_code = 401)
     if permission not in payload['permissions']:
         raise AuthError({
             'code': 'unauthorized',
             'description': 'Suitable permission not found, unauthorized!!!'
-        }, status_code=403)
+        }, status_code=401)
     return True
 
 '''
@@ -136,11 +136,11 @@ def verify_decode_jwt(token):
             raise AuthError({
                 'code': 'invalid_header',
                 'description': 'Unable to parse authentication token.'
-            }, 400)
+            }, 401)
     raise AuthError({
         'code': 'invalid_header',
         'description': 'Unable to find the appropriate key.'
-    }, 400)
+    }, 401)
 
 '''
 @Done implement @requires_auth(permission) decorator method
@@ -158,6 +158,8 @@ def requires_auth(permission=''):
         def wrapper(*args, **kwargs):
             token = get_token_auth_header()
             payload = verify_decode_jwt(token)
+            print("PAYLOAD")
+            print(payload)
             check_permissions(permission, payload)
             return f(payload, *args, **kwargs)
         return wrapper
